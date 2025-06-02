@@ -1,0 +1,5 @@
+newsapi-python
+python-dotenv
+fastapi
+uvicorn
+kafka-python
