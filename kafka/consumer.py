@@ -2,7 +2,7 @@
 from confluent_kafka import Consumer
 import socket
 config={
-    'bootstrap.servers': 'localhost:37841',
+    'bootstrap.servers': 'localhost:34811',
     'group.id':'kafka-python-getting-started',
      'auto.offset.reset': 'earliest'
 }
@@ -10,10 +10,10 @@ config={
 class NewsConsumer:
     def __init__(self):
         self.consumer=Consumer(config)
-        self.topic="news-apis"
-    def readConsumer(self):
+        
+    def readConsumer(self,topic="news-apis"):
         try:
-            self.consumer.subscribe([self.topic])
+            self.consumer.subscribe([topic])
         
             while True:
                 msg = self.consumer.poll(1.0)
@@ -25,7 +25,7 @@ class NewsConsumer:
                 elif msg.error():
                     print("ERROR: %s".format(msg.error()))
                 else:
-                    print(msg.topic(),msg.value())
+                    yield msg.value()
                     # Extract the (optional) key and value, and print.
                     # print("Consumed event from topic {topic}: key = {key:12} value = {value:12}".format(
                     #     topic=msg.topic(), key=msg.key().decode('utf-8'), value=msg.value().decode('utf-8')))

@@ -2,7 +2,7 @@
 from confluent_kafka import Producer 
 import json
 conf= {
-    'bootstrap.servers':'localhost:37841',
+    'bootstrap.servers':'localhost:34811',
     'acks':"all"
 }
 

@@ -3,5 +3,4 @@ python-dotenv
 fastapi
 uvicorn
 confluent-kafka
-loguru
 dbt-core
