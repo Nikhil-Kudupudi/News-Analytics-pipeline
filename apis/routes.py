@@ -8,15 +8,10 @@ from kafka.adminclient import createTopic, existingTopics
 from kafka.producer import NewsProducer
 router=APIRouter()
 
-news_producer=NewsProducer()
 @router.post("/v1/getEverything")
 async def GetEverything(q:str,request:Request):
     try:
-        topic="getEverything"
-        existingTopcis=existingTopics()
-        if topic not in existingTopcis.keys():
-            createTopic([topic])
-        news_producer.send_message({"q":q},topic="getEverything")
+      
         response=getEverything(q)
         
         return response
@@ -34,7 +29,7 @@ def getTopHeadlines(request:Request):
         existingTopcis=existingTopics()
         if topic not in existingTopcis.keys():
             createTopic([topic])
-        news_producer.send_message({},topic="top-headlines")
+        
         response= getTopheadlines()
         return response
     except Exception as e:
@@ -48,7 +43,7 @@ def getHeadlineSources(request:Request):
      This is a minor endpoint
     """
     try:
-        news_producer.send_message({},topic="top-headlines-sources")
+        # news_producer.send_message({},topic="top-headlines-sources")
         response= getSources()
         return response
     except Exception as e:
