@@ -4,3 +4,4 @@ fastapi
 uvicorn
 confluent-kafka
 dbt-core
+apache-airflow
