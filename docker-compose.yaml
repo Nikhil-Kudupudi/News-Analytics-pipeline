@@ -49,9 +49,10 @@ x-airflow-common:
   # In order to add custom dependencies or upgrade provider distributions you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:3.0.1}
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:latest}
   build: 
     context: .
+    dockerfile: Dockerfile
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -81,6 +82,9 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/kafka:/opt/airflow/kafka 
     - ${AIRFLOW_PROJ_DIR:-.}/apis:/opt/airflow/apis
     - ${AIRFLOW_PROJ_DIR:-.}/dbt_project:/opt/airflow/dbt_project
+    - ${AIRFLOW_PROJ_DIR:-.}/pipelines:/opt/airflow/pipelines
+    - ${AIRFLOW_PROJ_DIR:-.}/utils:/opt/airflow/utils
+    - ${AIRFLOW_PROJ_DIR:-.}/spark_Streaming:/opt/airflow/spark_Streaming
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on

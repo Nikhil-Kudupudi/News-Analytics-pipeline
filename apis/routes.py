@@ -26,9 +26,9 @@ def getTopHeadlines(request:Request):
     """
     try:
         topic="top-headlines"
-        existingTopcis=existingTopics()
-        if topic not in existingTopcis.keys():
-            createTopic([topic])
+        # existingTopcis=existingTopics()
+        # if topic not in existingTopcis.keys():
+        #     createTopic([topic])
         
         response= getTopheadlines()
         return response

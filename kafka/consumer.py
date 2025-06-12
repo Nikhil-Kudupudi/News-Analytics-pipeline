@@ -4,11 +4,15 @@ import socket
 import time
 import json
 config={
-    'bootstrap.servers': 'localhost:34811',
+    'bootstrap.servers': 'localhost:33695',
     'group.id':'kafka-python-getting-started',
      'auto.offset.reset': 'earliest'
 }
 TIME_OUT=60
+
+
+## not using this now since on a large scale pooling, sharding and processing all to be handled, 
+# aalterate we are using spark structured streaming where we can load and process at a time
 class NewsConsumer:
     def __init__(self):
         self.consumer=Consumer(config)
@@ -42,6 +46,7 @@ class NewsConsumer:
         finally:
             # Leave group and commit final offsets
             self.consumer.close()
+
 
 if __name__ == "__main__":
     consumer=NewsConsumer()
