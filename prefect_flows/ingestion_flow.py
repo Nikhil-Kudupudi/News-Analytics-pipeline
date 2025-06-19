@@ -1,4 +1,5 @@
-from prefect_flows import flow , task
+from prefect import flow , task
+
 from pipelines.tasks.fetch_news import fetchNewsApiData
 from pipelines.tasks.publish_to_kafka import publishToKafka
 
@@ -16,7 +17,7 @@ def publishToKafkaTask(data,topic):
 @flow(name="NewsIngstionPipeline",log_prints=True)
 def newsIngestion():
     data=fetchNewsTask()
-    publishToKafkaTask(data,"news-api")
+    publishToKafkaTask(data,"news-apis")
 
 if __name__=="__main__":
     newsIngestion()

@@ -7,3 +7,5 @@ dbt-core
 apache-airflow
 apache-airflow-providers-common-messaging
 prefect
+boto3
+pyspark
