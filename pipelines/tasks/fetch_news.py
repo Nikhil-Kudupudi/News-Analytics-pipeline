@@ -57,10 +57,25 @@ def getSources():
 
 # -------------------------------------------------FECTH TASK --------------------------------------------------------
 
-def fetchNewsApiData():
+def fetchEverythingAPIData():
     try:
         response=getEverything(q="data,finance,tech")
         return response
     except Exception as e:
         logging.error("Error while fetching apis data")
+        raise Exception(e)
+    
+def fetchTopHeadlinesApi():
+    try:
+        response=getTopheadlines()
+        return response 
+    except Exception as e:
+        logging.error("Error while fetching  Top Headlines")
+        raise Exception(e)
+def fetchTopSourcesApi():
+    try:
+        response=getSources()
+        return response 
+    except Exception as e:
+        logging.error("Error while fetching top sources")
         raise Exception(e)

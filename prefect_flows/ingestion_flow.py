@@ -1,23 +1,17 @@
-from prefect import flow , task
-
-from pipelines.tasks.fetch_news import fetchNewsApiData
-from pipelines.tasks.publish_to_kafka import publishToKafka
-
-
-@task(retries=1)
-def fetchNewsTask():
-    data=fetchNewsApiData()
-    return data
-
-@task(retries=1)
-def publishToKafkaTask(data,topic):
-    publishToKafka(data,topic)
-
-
-@flow(name="NewsIngstionPipeline",log_prints=True)
+from prefect import flow
+from prefect_flows.getEverythingFlow import getEverythingFlow
+from prefect_flows.getSourcesFlow import getSourcesFLow
+from prefect_flows.getTopHeadlinesFlow import getTopHeadlinesFLow
+@flow(timeout_seconds=5000,name="AllFlows",log_prints=True)
 def newsIngestion():
-    data=fetchNewsTask()
-    publishToKafkaTask(data,"news-apis")
+    getEverythingFlow()
+    getSourcesFLow()
+    getTopHeadlinesFLow()
+
 
 if __name__=="__main__":
-    newsIngestion()
+    newsIngestion.serve(
+        name="News-Ingestion",
+        tags=["news-api"],
+        
+        )

@@ -1,4 +1,4 @@
-from apis.logs import logging
+from utils.logs import logging
 from newsapi import NewsApiClient
 import configparser
 from kafka.adminclient import createTopic, existingTopics
@@ -16,7 +16,7 @@ API_KEY=get_config('news_api','api_key')
 
 news=NewsApiClient(api_key=API_KEY)
 config={
-    'bootstrap.servers': 'localhost:41349',
+    'bootstrap.servers': 'localhost:33009',
     'group.id':'kafka-python-getting-started',
      'auto.offset.reset': 'earliest'
 }

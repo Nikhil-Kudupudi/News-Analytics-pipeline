@@ -1,7 +1,8 @@
 from confluent_kafka.admin import AdminClient
-from apis.logs import logging
+from utils.logs import logging
+
 config={
-    'bootstrap.servers': 'localhost:41349',
+    'bootstrap.servers': 'localhost:33009',
 }
 client=AdminClient(config)
 def existingTopics():

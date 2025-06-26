@@ -4,7 +4,7 @@ import socket
 import time
 import json
 config={
-    'bootstrap.servers': 'localhost:41349',
+    'bootstrap.servers': 'localhost:33009',
     'group.id':'kafka-python-getting-started',
      'auto.offset.reset': 'earliest'
 }
