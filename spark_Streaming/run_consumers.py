@@ -3,16 +3,16 @@ from spark_Streaming.spark_consumer import run_pipeline
 
 
 
-def push_getEverything():
+def consumeMessages(topic,appName):
     df=run_pipeline(
-        app_name="News-APi1",
-        topic="getEverythingApi"
+        app_name=appName,
+        topic=topic
     )
-
     return df
+
 
 
 # def push_getTopheadlines():
 
-if __name__=="__main__":
-    push_getEverything()    
+# if __name__=="__main__":
+#     consumeMessages("news-api-getEverything",)    

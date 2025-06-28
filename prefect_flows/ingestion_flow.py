@@ -12,6 +12,5 @@ def newsIngestion():
 if __name__=="__main__":
     newsIngestion.serve(
         name="News-Ingestion",
-        tags=["news-api"],
-        
+        tags=["news-api"]
         )

@@ -20,7 +20,7 @@ class NewsConsumer:
     def readConsumer(self,topic="news-apis"):
         try:
             self.consumer.subscribe([topic])
-        
+            
             while True:
                 msg = self.consumer.poll(1.0)
                 if msg is None:

@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 from confluent_kafka import Producer 
 import json
+
+from kafka.adminclient import createTopic, existingTopics
+from utils.config_loader import get_config
+
+
+PORTNUMBER=get_config("kafka",'bootstrap.servers')
 conf= {
-    'bootstrap.servers':'localhost:33009',
+    'bootstrap.servers':PORTNUMBER,
     'acks':"all"
 }
 
@@ -18,7 +24,9 @@ class NewsProducer:
     def send_message(self,data,topic="news-apis"):
         try:
             value=json.dumps(data).encode("utf-8")
-
+            topics=existingTopics()
+            if topic not in topics:
+                createTopic(topic)
             self.producer.produce(topic,value,callback=self.acked)
         
         except BufferError:

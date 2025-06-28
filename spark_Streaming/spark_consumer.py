@@ -2,7 +2,9 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
 import os
 from utils.config_loader import get_config
-DEL
+from aws_files.awsUtils import AWSUtils
+from utils.utils import formatName
+
 class SparkSessionBuilder:
     def __init__(self):
         self.aws_access_key = get_config("aws", "aws_access_key_id")
@@ -14,7 +16,7 @@ class SparkSessionBuilder:
             .appName(app_name) \
             .master("local[*]") \
             .config("spark.jars.packages",
-                    "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0"
+                    "org.apache.spark:spark-sql-kafka-0-10_2.13:4.0.0,"
                     "org.apache.hadoop:hadoop-aws:3.4.0,"
                     "com.amazonaws:aws-java-sdk-bundle:1.12.782") \
             .config("spark.hadoop.fs.s3a.access.key", self.aws_access_key) \
@@ -37,7 +39,7 @@ class KafkaStreamConsumer:
         self.spark = spark
         self.topic = topic
         self.bootstrap_servers = get_config('kafka',"bootstrap.servers")
-
+        
     def read_stream(self):
         return self.spark.readStream \
             .format("kafka") \
@@ -57,22 +59,27 @@ class KafkaStreamConsumer:
 def run_pipeline(app_name:str,topic: str):
     spark_builder = SparkSessionBuilder()
     spark = spark_builder.build_session(app_name)
-
+    bucket_name=get_config("aws","bucket_name")
     consumer = KafkaStreamConsumer(spark, topic)
     raw_df = consumer.read_stream()
     parsed_df = consumer.parse_stream(raw_df)
 
     # Optional: print schema for debug
     parsed_df.printSchema()
-
+    foldername=formatName(topic)
     # Define output paths
-    s3_base = "s3a://{}/files"
-    output_path = f"{s3_base}/"
-    checkpoint_path = f"{s3_base}/checkpoint"
+    s3_base = f"s3a://{bucket_name}/files/"
+    output_path = f"{s3_base}/{foldername}"
+    checkpoint_path = f"{s3_base}/checkpoint/{foldername}"
 
     # Create folders locally (safe fallback)
-    os.makedirs("files", exist_ok=True)
-    os.makedirs("files/checkpoint", exist_ok=True)
+    # os.makedirs("files", exist_ok=True)
+    # os.makedirs("files/checkpoint", exist_ok=True)
+    
+    #aws
+    awsutil=AWSUtils()
+    
+    awsutil.create_folder(foldername=foldername)
 
     # Write stream to S3
     query = parsed_df.writeStream \

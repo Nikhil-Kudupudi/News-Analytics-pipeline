@@ -8,7 +8,7 @@ from utils.config_loader import get_config
 
 class AWSUtils:
     def __init__(self):
-        self.bucket_name=get_config("aws","bucket")
+        self.bucket_name=get_config("aws","bucket_name")
         self.region=get_config("aws","region")
         self.s3_client = boto3.client('s3')
 

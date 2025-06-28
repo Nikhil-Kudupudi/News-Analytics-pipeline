@@ -1,8 +1,9 @@
 from confluent_kafka.admin import AdminClient
+from utils.config_loader import get_config
 from utils.logs import logging
-
+PORT_NUMBER=get_config("kafka","bootstrap.servers")
 config={
-    'bootstrap.servers': 'localhost:33009',
+    'bootstrap.servers': PORT_NUMBER,
 }
 client=AdminClient(config)
 def existingTopics():

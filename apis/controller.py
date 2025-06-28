@@ -15,11 +15,6 @@ config.read('config.conf')
 API_KEY=get_config('news_api','api_key')
 
 news=NewsApiClient(api_key=API_KEY)
-config={
-    'bootstrap.servers': 'localhost:33009',
-    'group.id':'kafka-python-getting-started',
-     'auto.offset.reset': 'earliest'
-}
 # /v1/everything
 def getEverything(q):
     """
