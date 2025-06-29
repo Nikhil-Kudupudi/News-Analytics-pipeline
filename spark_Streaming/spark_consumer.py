@@ -1,6 +1,7 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col,from_json
 import os
+from spark_Streaming.schemas import schemas
 from utils.config_loader import get_config
 from aws_files.awsUtils import AWSUtils
 from utils.utils import formatName
@@ -54,13 +55,23 @@ class KafkaStreamConsumer:
             "CAST(value AS STRING)",
             "topic", "partition", "offset", "timestamp"
         )
+    
+    def structurise_schema(self,raw_df,schema):
+        return raw_df\
+               .selectExpr("CAST(value as STRING) as json_str")\
+               .select(from_json("json_str",schema)).alias("data")
+    
 
 
-def run_pipeline(app_name:str,topic: str):
+def getConsumer(app_name,topic):
     spark_builder = SparkSessionBuilder()
     spark = spark_builder.build_session(app_name)
-    bucket_name=get_config("aws","bucket_name")
     consumer = KafkaStreamConsumer(spark, topic)
+    return consumer
+
+def run_pipeline(app_name:str,topic: str):
+    bucket_name=get_config("aws","bucket_name")
+    consumer=getConsumer(app_name,topic)
     raw_df = consumer.read_stream()
     parsed_df = consumer.parse_stream(raw_df)
 
@@ -91,6 +102,16 @@ def run_pipeline(app_name:str,topic: str):
     return parsed_df
     # query.awaitTermination()
 
+
+
+def load_raw_data_from_s3(app_name,topic: str):
+    topicSchema=schemas[
+        topic
+    ]
+    consumer = getConsumer(app_name=app_name,topic=topic)
+    raw_df=consumer.read_stream()
+    parse_df=raw_df.structurise_schema(raw_df,topicSchema)
+    return parse_df
 
 if __name__ == "__main__":
     run_pipeline(app_name="NewsStream",topic="news-apis")
