@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col,from_json
+from pyspark.sql.functions import col,from_json,current_timestamp,expr,to_json,struct
 import os
 from spark_Streaming.schemas import schemas
 from utils.config_loader import get_config
@@ -12,7 +12,7 @@ class SparkSessionBuilder:
         self.aws_secret_key = get_config("aws", "aws_secret_access_key")
         self.region = get_config("aws", "region")
      
-    def build_session(self, app_name="SparkS3App"):
+    def build_session(self, app_name="NewsStream"):
         return SparkSession.builder \
             .appName(app_name) \
             .master("local[*]") \
@@ -36,82 +36,67 @@ class SparkSessionBuilder:
 
 
 class KafkaStreamConsumer:
-    def __init__(self, spark: SparkSession, topic: str):
+    def __init__(self, spark: SparkSession):
         self.spark = spark
-        self.topic = topic
         self.bootstrap_servers = get_config('kafka',"bootstrap.servers")
         
     def read_stream(self):
         return self.spark.readStream \
             .format("kafka") \
             .option("kafka.bootstrap.servers", self.bootstrap_servers) \
-            .option("subscribe", self.topic) \
+            .option("subscribePattern", "news-.*") \
             .option("startingOffsets", "earliest") \
             .load()
 
     def parse_stream(self, df):
-        return df.selectExpr(
-            "CAST(key AS STRING)",
-            "CAST(value AS STRING)",
-            "topic", "partition", "offset", "timestamp"
-        )
-    
-    def structurise_schema(self,raw_df,schema):
-        return raw_df\
-               .selectExpr("CAST(value as STRING) as json_str")\
-               .select(from_json("json_str",schema)).alias("data")
-    
-
-
-def getConsumer(app_name,topic):
-    spark_builder = SparkSessionBuilder()
-    spark = spark_builder.build_session(app_name)
-    consumer = KafkaStreamConsumer(spark, topic)
-    return consumer
-
-def run_pipeline(app_name:str,topic: str):
-    bucket_name=get_config("aws","bucket_name")
-    consumer=getConsumer(app_name,topic)
-    raw_df = consumer.read_stream()
-    parsed_df = consumer.parse_stream(raw_df)
-
-    # Optional: print schema for debug
-    parsed_df.printSchema()
-    foldername=formatName(topic)
-    # Define output paths
-    s3_base = f"s3a://{bucket_name}/files/"
-    output_path = f"{s3_base}/{foldername}"
-    checkpoint_path = f"{s3_base}/checkpoint/{foldername}"
-
-    # Create folders locally (safe fallback)
-    # os.makedirs("files", exist_ok=True)
-    # os.makedirs("files/checkpoint", exist_ok=True)
-    
-    #aws
-    awsutil=AWSUtils()
-    
-    awsutil.create_folder(foldername=foldername)
-
-    # Write stream to S3
-    query = parsed_df.writeStream \
-        .format("parquet") \
-        .option("path", output_path) \
-        .option("checkpointLocation", checkpoint_path) \
-        .trigger(processingTime="1 second") \
-        .start()
-    return parsed_df
-    # query.awaitTermination()
+        
+        return df.selectExpr("topic", "CAST(value AS STRING)","timestamp")\
+        
 
 
 
-def load_raw_data_from_s3(app_name,topic: str):
-    topicSchema=schemas[
-        topic
-    ]
-    consumer = getConsumer(app_name=app_name,topic=topic)
-    raw_df=consumer.read_stream()
-    parse_df=raw_df.structurise_schema(raw_df,topicSchema)
-    return parse_df
+
+
+
+
+
 
 if __name__ == "__main__":
-    run_pipeline(app_name="NewsStream",topic="news-apis")
+    try:
+        sparksession=SparkSessionBuilder()
+        spark=sparksession.build_session()
+        consumer=KafkaStreamConsumer(spark)
+        df=consumer.read_stream()
+        parsed_df=consumer.parse_stream(df)
+        
+        query=parsed_df\
+        .writeStream\
+        .outputMode("append")\
+        .format("console")\
+        .start()
+        awsutil=AWSUtils()
+        bucket_name=get_config("aws","bucket_name")
+        #filter schemas based on topic and m,ap and print
+        for topic, schema in schemas.items():
+            topic_df=parsed_df.filter(col("topic")==topic)
+            udf=topic_df \
+                .withColumn("parsed", from_json(col("value"), schema)) \
+                .select("parsed.*")
+            
+
+                # #  S3 output paths
+            foldername = formatName(topic)
+            s3_base = f"s3a://{bucket_name}/files/"
+            output_path = f"{s3_base}/{foldername}"
+            checkpoint_path = f"s3a://{bucket_name}/checkpoint/{foldername}"
+            awsutil.create_folder(foldername)
+            save_df=udf.writeStream.format("parquet")\
+                    .option("path",output_path)\
+                    .option("checkpointLocation",checkpoint_path)\
+                    .trigger(processingTime="1 second")\
+                    .start()
+
+        query.awaitTermination()
+    except Exception as e:
+        query.stop()
+

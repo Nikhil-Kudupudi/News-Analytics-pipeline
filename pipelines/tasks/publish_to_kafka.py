@@ -7,11 +7,10 @@ config={
      'auto.offset.reset': get_config('kafka','auto.offset.reset')
 }
 
-def publishToKafka(data:list, topic="news-apis"):
+def publishToKafka(data, topic="news-apis"):
     try:
         producer= NewsProducer()    
-        for record in data:
-            producer.send_message(record,topic)   
+        producer.send_message(data,topic)   
         producer.flush_producer() 
     except Exception as e:
         raise Exception(e)

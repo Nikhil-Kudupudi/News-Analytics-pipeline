@@ -1,7 +1,7 @@
 from utils.config_loader import get_config
-from models.getEverythingSchema import Everything
-from models.getSources import TopSources
-from models.getTopHeadlines import TopHeadlines
+from spark_Streaming.models.getEverythingSchema import Everything
+from spark_Streaming.models.getSources import TopSources
+from spark_Streaming.models.getTopHeadlines import TopHeadlines
 
 GET_EVERYTHING_TOPIC=get_config("topics","getEverything")
 TOP_HEADLINES=get_config("topics","getTopHeadlines")

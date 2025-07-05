@@ -23,7 +23,7 @@ class NewsProducer:
             print(f"Message produced: {str(msg)}")
     def send_message(self,data,topic="news-apis"):
         try:
-            value=json.dumps(data).encode("utf-8")
+            value=json.dumps(data)
             topics=existingTopics()
             if topic not in topics:
                 createTopic(topic)

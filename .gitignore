@@ -154,3 +154,4 @@ cython_debug/
 #custom
 *.conf
 .aws
+news-venv

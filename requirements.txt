@@ -9,3 +9,4 @@ apache-airflow-providers-common-messaging
 prefect
 boto3
 pyspark
+snowflake-connector-python
