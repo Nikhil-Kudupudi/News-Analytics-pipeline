@@ -59,7 +59,9 @@ def getSources():
 
 def fetchEverythingAPIData():
     try:
-        response=getEverything(q="data,finance,tech")
+        # "can only fetch one data otherwise articles are empty"
+        response=getEverything(q="data")
+        
         return response
     except Exception as e:
         logging.error("Error while fetching apis data")
@@ -79,3 +81,7 @@ def fetchTopSourcesApi():
     except Exception as e:
         logging.error("Error while fetching top sources")
         raise Exception(e)
+    
+if __name__=="__main__":
+    response=getEverything(q="data")
+    print(fetchEverythingAPIData())

@@ -1,5 +1,5 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col,from_json,current_timestamp,expr,to_json,struct
+from pyspark.sql.functions import *
 import os
 from spark_Streaming.schemas import schemas
 from utils.config_loader import get_config
@@ -13,7 +13,7 @@ class SparkSessionBuilder:
         self.region = get_config("aws", "region")
      
     def build_session(self, app_name="NewsStream"):
-        return SparkSession.builder \
+        spark=SparkSession.builder \
             .appName(app_name) \
             .master("local[*]") \
             .config("spark.jars.packages",
@@ -33,6 +33,7 @@ class SparkSessionBuilder:
             .config("spark.sql.parquet.filterPushdown", "true") \
             .config("spark.sql.hive.metastorePartitionPruning", "true") \
             .getOrCreate()
+        return spark
 
 
 class KafkaStreamConsumer:
@@ -40,18 +41,19 @@ class KafkaStreamConsumer:
         self.spark = spark
         self.bootstrap_servers = get_config('kafka',"bootstrap.servers")
         
+        # offsets latest gets the recent data, earliest is preferred to tackle data loss
     def read_stream(self):
         return self.spark.readStream \
             .format("kafka") \
             .option("kafka.bootstrap.servers", self.bootstrap_servers) \
             .option("subscribePattern", "news-.*") \
-            .option("startingOffsets", "earliest") \
+            .option("startingOffsets", "latest") \
             .load()
 
     def parse_stream(self, df):
         
-        return df.selectExpr("topic", "CAST(value AS STRING)","timestamp")\
-        
+        parsed_df = df.selectExpr("CAST(value AS STRING)") 
+        return parsed_df
 
 
 
@@ -73,6 +75,7 @@ if __name__ == "__main__":
         .writeStream\
         .outputMode("append")\
         .format("console")\
+         .trigger(processingTime="10 seconds")\
         .start()
         awsutil=AWSUtils()
         bucket_name=get_config("aws","bucket_name")
@@ -80,7 +83,7 @@ if __name__ == "__main__":
         for topic, schema in schemas.items():
             topic_df=parsed_df.filter(col("topic")==topic)
             udf=topic_df \
-                .withColumn("parsed", from_json(col("value"), schema)) \
+                .withColumn("parsed", from_json(col("value").cast("string"), schema)) \
                 .select("parsed.*")
             
 
@@ -90,13 +93,14 @@ if __name__ == "__main__":
             output_path = f"{s3_base}/{foldername}"
             checkpoint_path = f"s3a://{bucket_name}/checkpoint/{foldername}"
             awsutil.create_folder(foldername)
-            save_df=udf.writeStream.format("parquet")\
+            save_df=udf.writeStream.format("json")\
+            .outputMode("append")\
                     .option("path",output_path)\
                     .option("checkpointLocation",checkpoint_path)\
-                    .trigger(processingTime="1 second")\
+                    .trigger(processingTime="10 seconds")\
                     .start()
-
+            print("update to aws successfully","*"*50)
         query.awaitTermination()
     except Exception as e:
-        query.stop()
+        raise Exception(e)
 
