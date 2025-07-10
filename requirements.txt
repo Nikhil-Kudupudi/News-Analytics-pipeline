@@ -1,0 +1,12 @@
+newsapi-python
+python-dotenv
+fastapi
+uvicorn
+confluent-kafka
+dbt-core
+apache-airflow
+apache-airflow-providers-common-messaging
+prefect
+boto3
+pyspark
+snowflake-connector-python
