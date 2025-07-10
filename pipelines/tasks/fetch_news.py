@@ -36,7 +36,7 @@ def getEverything(q):
 #/v1/top-headlines
 def getTopheadlines():
     try:
-        response=news.get_top_headlines()
+        response=news.get_top_headlines(category='business')
         logging.info("/top-headlines api is called")
         return response
     except Exception as e:
